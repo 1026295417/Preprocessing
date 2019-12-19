@@ -1,0 +1,14 @@
+#RT:RightTop
+#LB:LeftBottom
+def IOU(rectangle A, rectangleB):
+    xs = [A.RT.x, A.LB.x, B.RT.x, B.LB.x]
+    ys = [A.RT.y, A.LB.y, B.RT.y, B.LB.y]
+    s_x = sorted(xs)
+    s_y = sorted(ys)
+    if s_x[1] in [A.LB.x, B.LB.x] or s_y[1] in [A.LB.y, B.LB.y]:
+        return 0
+    else:
+        cross = (s_x[2] - s_x[1]) *  (s_y[2] - s_y[1])
+        SA = (A.RT.x - A.LB.x) * (A.RT.y - A.LB.y)
+        SB = (B.RT.x - B.LB.x) * (B.RT.y - B.LB.y) 
+        return cross/(SA + SB - cross)
