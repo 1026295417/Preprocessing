@@ -1,0 +1,62 @@
+def map_rank_faster_eval(query_info, test_info, result_argsort):
+    # about 10% lower than matlab result
+    # for evaluate rank1 and map
+    match = []
+    junk = []
+
+    for q_index, (qp, qc) in enumerate(query_info):
+        tmp_match = []
+        tmp_junk = []
+        for t_index in range(len(test_info)):
+            p_t_idx = result_argsort[q_index][t_index]
+            p_info = test_info[int(p_t_idx)]
+
+            tp = p_info[0]
+            tc = p_info[1]
+            if tp == qp and qc != tc:
+                tmp_match.append(t_index)
+            elif tp == qp or tp == -1:
+                tmp_junk.append(t_index)
+        match.append(tmp_match)
+        junk.append(tmp_junk)
+
+    rank_1 = 0.0
+    mAP = 0.0
+    for idx in range(len(query_info)):
+        if idx % 100 == 0:
+            print('evaluate img %d' % idx)
+        recall = 0.0
+        precision = 1.0
+        ap = 0.0
+        YES = match[idx]
+        IGNORE = junk[idx]
+        ig_cnt = 0
+        for ig in IGNORE:
+            if ig < YES[0]:
+                ig_cnt += 1
+            else:
+                break
+        if ig_cnt >= YES[0]:
+            rank_1 += 1
+
+        for i, k in enumerate(YES):
+            ig_cnt = 0
+            for ig in IGNORE:
+                if ig < k:
+                    ig_cnt += 1
+                else:
+                    break
+            cnt = k + 1 - ig_cnt
+            hit = i + 1
+            tmp_recall = hit / len(YES)
+            tmp_precision = hit / cnt
+            ap = ap + (tmp_recall - recall) * ((precision + tmp_precision) / 2)
+            recall = tmp_recall
+            precision = tmp_precision
+
+        mAP += ap
+    rank1_acc = rank_1 / QUERY_NUM
+    mAP = mAP / QUERY_NUM
+    print('Rank 1:\t%f' % rank1_acc)
+    print('mAP:\t%f' % mAP)
+    return rank1_acc, mAP
